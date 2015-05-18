@@ -11,15 +11,20 @@ public abstract class Provider {
 
     private static final SimpleHttpClient httpClient = new SimpleHttpClient();
     private String name;
+    private boolean enabled = true;
+
+    static List<Provider> providers;
 
     public Provider(String name) {
         this.name = name;
     }
 
     public static List<Provider> getAll() {
-        List<Provider> providers = new ArrayList<>();
-        providers.add(new HotsLogsProvider());
-        providers.add(new HeroGGProvider());
+        if (providers == null) {
+            providers = new ArrayList<>();
+            providers.add(new HotsLogsProvider());
+            providers.add(new HeroGGProvider());
+        }
         return providers;
     }
 
@@ -32,4 +37,6 @@ public abstract class Provider {
     public String getName() {
         return name;
     }
+    public boolean isEnabled() { return enabled; }
+    public void setEnabled(boolean value) { enabled = value; }
 }

@@ -1,6 +1,7 @@
 package com.metacodestudio.hotsuploader.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.metacodestudio.hotsuploader.providers.Provider;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -55,18 +56,41 @@ public class ReplayFile {
 
     @JsonIgnore
     public Status getStatus() {
-        if (uploadStatuses.size() < 2) {
+        if (uploadStatuses.size() < 1) {
             System.out.println("Empty status list");
             return Status.NEW;
         }
 
-        Status hotsLogStatus = uploadStatuses.get(0).getStatus();
-        Status heroGGStatus = uploadStatuses.get(1).getStatus();
-        if (heroGGStatus == Status.EXCEPTION || heroGGStatus == Status.NEW)
-            return heroGGStatus;
-        else
-            return hotsLogStatus;
+        List<Provider> providers = Provider.getAll();
+        for(Provider provider : providers) {
+            if (provider.isEnabled()) {
+                Status providerStatus = getStatusByProvider(provider);
+
+                if (providerStatus != Status.UPLOADED) {
+                    return providerStatus;
+                }
+            }
+        }
+
+        return Status.UPLOADED;
     }
+
+
+    @JsonIgnore
+    public Status getStatusByProvider(String providerName ) {
+        UploadStatus status = uploadStatuses.stream()
+                .filter(uploadStatus -> uploadStatus.getHost().equals(providerName))
+                .findFirst()
+                .orElse(null);
+
+        if (status == null)
+            return Status.NEW;
+
+        return status.getStatus();
+    }
+
+    @JsonIgnore
+    public Status getStatusByProvider(Provider provider ) { return getStatusByProvider(provider.getName()); }
 
     public File getFile() {
         return file;
